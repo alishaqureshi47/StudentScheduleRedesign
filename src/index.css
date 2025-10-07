@@ -1,0 +1,574 @@
+/* ---- Reset ---- */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body, #root { height: 100%; }
+body {
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, sans-serif;
+  background: #fafafa;
+  color: #1f2937;
+}
+
+/* ---- Layout ---- */
+.app {
+  display: flex;
+  flex-direction: column;
+  /* use exact viewport height so children can size and scroll internally */
+  height: 100vh;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #006a3d;
+  color: white;
+}
+.topbar .brand {
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dartmouth-logo {
+  height: 36px;
+  width: auto;
+  border-radius: 4px;
+  background: white;
+  object-fit: contain;
+}
+.topbar .term {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  /* visually separate term from username */
+  padding-right: 10px;
+  border-right: 1px solid rgba(255,255,255,0.16);
+  margin-right: 10px;
+}
+
+.topbar .term select {
+  border-radius: 8px;
+  border: none;
+  padding: 6px 10px;
+  background: white;
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.topbar .user { font-weight: 700; }
+
+/* container to hold right-side controls and push the select fully right */
+.right-controls {
+  display: flex;
+  align-items: center;
+  margin-left: auto; /* push to the far right */
+  gap: 10px;
+}
+
+.visually-hidden {
+  position: absolute !important;
+  height: 1px; width: 1px;
+  overflow: hidden; clip: rect(1px, 1px, 1px, 1px);
+  white-space: nowrap; border: 0; padding: 0; margin: -1px;
+}
+
+.topbar .term select {
+  border-radius: 8px;
+  border: none;
+  padding: 6px 10px;
+  background: white;
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.term-label {
+  color: rgba(255,255,255,0.85);
+  font-weight: 500;
+  margin-right: 8px;
+  font-size: 0.95rem;
+}
+
+/* ---- Main ---- */
+.content {
+  flex: 1;
+  min-height: 0; /* allow children to scroll internally */
+  display: flex;
+  flex-direction: column;
+  padding: 10px 16px 16px 16px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 16px;
+  /* allow grid to grow and its children to control scrolling */
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* ---- Calendar ---- */
+.calendar {
+  --header-h: 44px;
+  --slot-h: 20px;
+
+  display: grid;
+  grid-template-columns: 60px repeat(5, 1fr);
+  grid-template-rows: var(--header-h);
+  grid-auto-rows: var(--slot-h);
+
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  /* fill available space and scroll internally */
+  height: 100%;
+  min-height: 0;
+  overflow-y: auto;
+  scroll-behavior: smooth;
+  position: relative;
+}
+
+.day-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f4f7f5;
+}
+.time-col.day-header {
+  justify-content: flex-end;
+  padding-right: 8px;
+}
+
+/* Time grid */
+.time-cell {
+  justify-self: end;
+  padding-right: 8px;
+  font-size: 12px;
+  color: #6b7280;
+  border-right: 1px solid #e5e7eb;
+  border-top: 1px solid #f3f4f6;
+  background: transparent;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+.grid-cell {
+  border-top: 1px solid #f3f4f6;
+  border-left: 1px solid #f6f6f6;
+  background: transparent;
+}
+
+/* Ensure the calendar header is sticky and the grid rows reflect 15-min slots */
+.calendar {
+  --header-h: 48px;
+  --slot-h: 14px; /* each 15-min slot -> smaller to fit extended hours */
+}
+
+.day-header {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+}
+
+/* ---- Event blocks ---- */
+.event {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  position: relative;
+  background: var(--event-bg, #f6eeb6);
+  min-height: 78px; /* give a bit more vertical room for wrapped titles */
+  margin: 4px 0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, sans-serif;
+  overflow: hidden; /* prevent children from overflowing the event bounds */
+  box-sizing: border-box;
+}
+/* normalize appearance now that .event is a div (not a button) */
+.event {
+  cursor: default;
+  box-sizing: border-box;
+  border: black;
+  border-width: 0.5px;
+}
+
+.event-content {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: 14px 10px 14px 18px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.event-title {
+  font-weight: 700;
+  font-size: 1.35em;
+  margin-bottom: 4px;
+  line-height: 1.05;
+  letter-spacing: 0.02em;
+  text-align: left;
+  padding-left: 0;
+  /* allow up to 2 lines for long course titles */
+  display: -webkit-box;
+  /* standard property for newer linters/browsers */
+  line-clamp: 2;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal;
+}
+
+.event-meta {
+  /* font-size: 1.1em; */
+  color: #222;
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  margin-top: 8px;
+  font-family: inherit;
+}
+
+.event .event-location {
+  font-size: 0.92em;
+  text-align: left;
+  color: #111;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: normal; /* allow wrapping for location */
+}
+
+.event-timecode {
+  flex: 0 0 auto;
+  width: clamp(44px, 8vw, 70px); /* smaller and more constrained */
+  min-width: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 10px 10px 10px 0;
+  background: inherit;
+  filter: brightness(0.92);
+  font-size: 1.15em; /* slightly smaller so it doesn't dominate */
+  font-weight: 700;
+  color: #222;
+  border: none;
+  border-radius: 0;
+  box-sizing: border-box;
+  font-family: inherit;
+  letter-spacing: 0.04em;
+  height: 70%;
+  outline: none;
+  user-select: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---- Sidebar ---- */
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  overflow-y: auto;
+  min-height: 0;
+  height: 100%;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  padding: 16px;
+}
+
+.sidebar-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.popup-overlay::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.35);
+  z-index: 1000;
+}
+
+.popup-content {
+  background: white;
+  padding: 24px;
+  position: absolute;
+  top: 50%;
+  right: calc(280px + 24px); /* place popup to the left of the 280px sidebar + gap */
+  transform: translateY(-50%);
+  border-radius: 0;
+  z-index: 1001;
+  width: 380px;
+  max-width: 45vw;
+}
+
+.popup-content.popup-anchored {
+  transform: none; /* don't center vertically when anchored */
+}
+
+@media (max-width: 1000px) {
+  /* on small screens center the popup instead of anchoring near the sidebar */
+  .popup-content {
+    position: relative;
+    right: auto;
+    transform: none;
+    width: 90%;
+    max-width: 500px;
+  }
+}
+
+.popup-content h2 {
+  background: #9747FF;
+  color: white;
+  margin: -24px -24px 24px -24px;
+  padding: 16px 24px;
+  font-size: 1.25em;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+/* Accordion inside popup */
+.accordion {
+  display: block;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.accordion-item + .accordion-item {
+  border-top: 1px solid #e9e9e9;
+}
+
+.accordion-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: linear-gradient(#f6f6f6, #efefef);
+  border: none;
+  cursor: pointer;
+  font-weight: 700;
+  color: #333;
+  text-align: left;
+}
+
+.accordion-title {
+  font-size: 1em;
+}
+
+.accordion-caret {
+  margin-left: 12px;
+  transition: transform 160ms ease;
+  font-size: 18px;
+  color: #666;
+}
+
+.accordion-caret.open {
+  transform: rotate(180deg);
+}
+
+.accordion-panel {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 220ms ease, padding 160ms ease;
+  padding: 0 16px;
+  background: #fff;
+}
+
+.accordion-panel.open {
+  max-height: 240px; /* space for eventual content */
+  padding: 12px 16px 16px 16px;
+}
+
+.panel-body {
+  font-size: 0.95em;
+  color: #222;
+  line-height: 1.3;
+}
+
+.panel-body div + div {
+  margin-top: 8px;
+}
+
+.close-button {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  border: 1px solid rgba(0,0,0,0.08);
+  box-shadow: 0 4px 10px rgba(16,24,40,0.06);
+  border-radius: 8px;
+  font-size: 18px;
+  color: #111827; /* dark text for high contrast */
+  cursor: pointer;
+  z-index: 2;
+  transition: background 120ms ease, transform 120ms ease, box-shadow 120ms ease;
+}
+
+.close-button:hover {
+  background: #f3f4f6;
+  transform: translateY(-1px);
+}
+
+.close-button:active {
+  transform: translateY(0);
+}
+
+.close-button:focus {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(66,120,86,0.12); /* subtle green focus ring */
+}
+
+.course-pill {
+  display: flex;
+  padding: 16px;
+  gap: 12px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.course-pill:hover {
+  background: #f9fafb;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.pill-color {
+  width: 4px;
+  border-radius: 2px;
+}
+
+.pill-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.pill-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.course-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.course-header strong {
+  font-size: 1.1em;
+  color: #111;
+}
+.course-header strong {
+  font-size: 1.6em;
+  color: #111;
+  font-weight: 800;
+  line-height: 1;
+  margin-top: 0;
+}
+
+.section {
+  font-size: 0.9em;
+  color: #666;
+}
+
+.course-title {
+  font-size: 1.85em;
+  color: #333;
+  font-weight: 800;
+  line-height: 1.05;
+}
+
+.course-details {
+  font-size: 0.9em;
+  color: #666;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.course-details {
+  font-size: 0.975em;
+  color: #666;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.instructor { font-weight: 600; color: black; font-size: 1.05em; }
+.primary-time .x-hours { color: black; font-size: 1.5em; }
+
+.card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 12px;
+}
+.card-title { font-weight: 800; margin-bottom: 8px; }
+.details .detail-row { margin: 6px 0; }
+.muted { color: #6b7280; }
+
+.course-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1 1 auto; /* fill available vertical space */
+  align-items: stretch;
+  overflow: auto; /* allow scrolling if many courses */
+  padding-right: 6px; /* room for scroll bar */
+}
+
+.course-pill {
+  display: grid;
+  grid-template-columns: 10px 1fr;
+  gap: 12px;
+  align-items: stretch;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  padding: 16px;
+  text-align: left;
+  background: #fafafa;
+  cursor: pointer;
+  flex: 1 1 0; /* allow pills to grow and share vertical space */
+  min-height: 80px; /* reasonable minimum */
+}
+.course-pill:hover { background: #f5f5f5; transform: translateY(-2px); }
+.pill-color { width: 10px; border-radius: 6px; height: 100%; align-self: stretch; }
+.pill-text { display: grid; }
+.pill-text small { color: #6b7280; }
